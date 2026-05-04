@@ -17,13 +17,6 @@ def generate_launch_description() -> LaunchDescription:
             output='screen',
         ),
         Node(
-            package='ros2_racing_challenge',
-            executable='keyboard_controller',
-            name='keyboard_controller',
-            output='screen',
-            emulate_tty=True,
-        ),
-        Node(
             package='rviz2',
             executable='rviz2',
             name='rviz2',

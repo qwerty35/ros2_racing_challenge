@@ -33,44 +33,95 @@ Avoid modifying `racing_sim.py`, launch files, or message definitions so your so
 The input `CarState` contains the current vehicle state.
 
 ```text
-x         vehicle x position
-y         vehicle y position
-yaw       vehicle heading
-speed     vehicle speed
-steering  current steering angle
+x         vehicle x position [m]
+y         vehicle y position [m]
+yaw       vehicle heading [rad]
+speed     vehicle speed [m/s]
+steering  current steering angle [rad]
 ```
 
 The output `CarCommand` is the command sent to the vehicle.
 
 ```text
-acceleration   acceleration command in m/s^2
-steering_rate  steering angle rate command in rad/s
+acceleration   acceleration command [m/s^2]
+steering_rate  steering angle rate command [rad/s]
 ```
 
-The simulator applies the following command limits:
+
+## Vehicle Model
+
+For controller design, the vehicle can be approximated as a kinematic
+bicycle model:
+
+$$
+\begin{aligned}
+\dot{\mathbf{x}} &= f(\mathbf{x}) + B\mathbf{u} \\
+\mathbf{x} &=
+\begin{bmatrix}
+x & y & \psi & v & \delta
+\end{bmatrix}^{T} \\
+\mathbf{u} &=
+\begin{bmatrix}
+a & \omega
+\end{bmatrix}^{T} \\
+f(\mathbf{x}) &=
+\begin{bmatrix}
+v \cos(\psi) \\
+v \sin(\psi) \\
+\frac{v}{L} \tan(\delta) \\
+0 \\
+0
+\end{bmatrix}, \quad
+B =
+\begin{bmatrix}
+0 & 0 \\
+0 & 0 \\
+0 & 0 \\
+1 & 0 \\
+0 & 1
+\end{bmatrix}
+\end{aligned}
+$$
+
+where `v` is `speed`, `psi` is `yaw`, `delta` is `steering`, `a` is
+`acceleration`, `omega` is `steering_rate`, and `L` is the wheelbase. 
+
+Important model parameters
 
 ```text
-acceleration:  -4.5 to 2.8
-steering_rate: -6.0 to 6.0
+max speed:        9.0 m/s
+max steering:     +/-0.60 rad
+wheelbase:        1.0 m
+vehicle width:    0.65 m
+acceleration range:  [-4.5, 2.8] m/s^2
+steering_rate range: [-6.0, 6.0] rad/s
 ```
+
+- The tire model approximates lateral grip from tire slip and limits the
+resulting force by the available road friction.
+
+- Track friction decreases slightly as laps progress, so a controller that
+is stable early in the run may need extra margin in later laps.
 
 ## How To Run
 
 Run the simulator, your controller, and RViz together:
-
 ```bash
 ros2 launch ros2_racing_challenge racing.launch.py
 ```
 
-Run the simulator, keyboard controller, and RViz together:
-
-```bash
-ros2 launch ros2_racing_challenge racing_keyboard.launch.py
-```
-
 ## Keyboard Control
 
-The following keys are available when using `racing_keyboard.launch.py`.
+
+```bash
+#Terminal 1
+ros2 launch ros2_racing_challenge racing_sim.launch.py
+
+#Terminal 2
+ros2 run ros2_racing_challenge keyboard_controller
+```
+
+The following keys are available when using `keyboard_controller`.
 
 ```text
 a      steer left
